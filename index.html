@@ -186,9 +186,19 @@
     box-shadow: 0 8px 40px rgba(0,0,0,0.4);
   }
 
+  .pool-table-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 14px;
+  }
+
+  .pool-table-inner {
+    min-width: 620px;
+  }
+
   .pool-header {
     display: grid;
-    grid-template-columns: 44px 1fr repeat(4, 88px) 72px;
+    grid-template-columns: 44px 130px repeat(4, 90px) 64px;
     padding: 10px 16px;
     background: var(--green-deep);
     border-bottom: 2px solid var(--gold);
@@ -197,16 +207,16 @@
     letter-spacing: 2px;
     text-transform: uppercase;
     color: rgba(201,168,76,0.7);
-    gap: 4px;
+    gap: 6px;
   }
 
   .pool-row {
     display: grid;
-    grid-template-columns: 44px 1fr repeat(4, 88px) 72px;
-    padding: 14px 16px;
+    grid-template-columns: 44px 130px repeat(4, 90px) 64px;
+    padding: 12px 16px;
     border-bottom: 1px solid var(--cream-dark);
     align-items: center;
-    gap: 4px;
+    gap: 6px;
     transition: background 0.15s;
     animation: fadeSlide 0.4s ease both;
   }
@@ -254,12 +264,15 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: center;
     background: var(--cream);
     border-radius: 8px;
-    padding: 5px 6px;
     border: 1px solid var(--cream-dark);
-    min-height: 52px;
-    justify-content: center;
+    width: 84px;
+    height: 58px;
+    padding: 0;
+    box-sizing: border-box;
+    flex-shrink: 0;
   }
   .golfer-chip.cut {
     background: var(--cut-bg);
@@ -276,8 +289,8 @@
     color: var(--text-mid);
     text-align: center;
     line-height: 1.2;
-    margin-bottom: 3px;
-    max-width: 80px;
+    margin-bottom: 2px;
+    width: 80px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -286,6 +299,7 @@
     font-family: 'Playfair Display', serif;
     font-size: 15px;
     font-weight: 700;
+    line-height: 1;
   }
   .chip-score.under { color: var(--score-under); }
   .chip-score.over  { color: var(--score-over); }
@@ -295,7 +309,8 @@
   .chip-thru {
     font-size: 9px;
     color: var(--text-muted);
-    margin-top: 1px;
+    margin-top: 2px;
+    line-height: 1;
   }
 
   /* Total score cell */
@@ -621,10 +636,7 @@
 
   /* Responsive */
   @media (max-width: 700px) {
-    .pool-header, .pool-row {
-      grid-template-columns: 36px 1fr repeat(4, 1fr) 60px;
-    }
-    .chip-name { font-size: 9px; max-width: 62px; }
+    .chip-name { font-size: 9px; }
     .chip-score { font-size: 13px; }
     .total-score { font-size: 18px; }
     .player-name { font-size: 14px; }
@@ -668,12 +680,14 @@
 
   <!-- Pool Leaderboard -->
   <div class="section-label">Pool Standings</div>
+  <div class="pool-table-scroll">
   <div class="pool-table" id="pool-table">
     <div class="skeleton-row"></div>
     <div class="skeleton-row"></div>
     <div class="skeleton-row"></div>
     <div class="skeleton-row"></div>
     <div class="skeleton-row"></div>
+  </div>
   </div>
 
   <!-- Golf Leaderboard -->
@@ -992,7 +1006,7 @@ function renderPool() {
 
   rows.sort((a, b) => a.total - b.total);
 
-  let html = `
+  let html = `<div class="pool-table-inner">
     <div class="pool-header">
       <div>Pos</div>
       <div>Player</div>
@@ -1031,10 +1045,8 @@ function renderPool() {
       </div>`;
   });
 
-  container.innerHTML = html;
+  container.innerHTML = html + '</div>';
 }
-
-// ─── RENDER GOLF TABLE ────────────────────────────────────────────────────────
 
 function renderGolf() {
   const container = document.getElementById('golf-table');
