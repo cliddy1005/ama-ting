@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+=<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -179,8 +179,7 @@
   }
 
   .pool-table {
-    background: var(--white);
-    border-radius: 14px;
+    /* id retained on scroll wrapper for JS targeting */
   }
 
   .pool-table-scroll {
@@ -193,6 +192,8 @@
 
   .pool-table-inner {
     min-width: 620px;
+    background: var(--white);
+    border-radius: 14px;
   }
 
   .pool-header {
@@ -679,14 +680,12 @@
 
   <!-- Pool Leaderboard -->
   <div class="section-label">Pool Standings</div>
-  <div class="pool-table-scroll">
-  <div class="pool-table" id="pool-table">
-    <div class="skeleton-row"></div>
-    <div class="skeleton-row"></div>
-    <div class="skeleton-row"></div>
-    <div class="skeleton-row"></div>
-    <div class="skeleton-row"></div>
-  </div>
+  <div class="pool-table-scroll" id="pool-table">
+    <div class="skeleton-row" style="min-width:620px"></div>
+    <div class="skeleton-row" style="min-width:620px"></div>
+    <div class="skeleton-row" style="min-width:620px"></div>
+    <div class="skeleton-row" style="min-width:620px"></div>
+    <div class="skeleton-row" style="min-width:620px"></div>
   </div>
 
   <!-- Golf Leaderboard -->
