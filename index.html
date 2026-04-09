@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ama Ting-Ting Tour · The Masters Pool 2026</title>
+<title>Ama-Ting Tour · The Masters Pool 2026</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Source+Sans+3:wght@300;400;600&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -327,6 +327,31 @@
     color: var(--text-muted);
   }
 
+  /* Glow amber for golfers near the cut line */
+  .golfer-chip.near-cut {
+    border-color: rgba(201,168,76,0.95);
+    box-shadow:
+      0 0 0 1px rgba(201,168,76,0.35),
+      0 0 10px rgba(201,168,76,0.45),
+      0 0 18px rgba(201,168,76,0.25);
+    animation: cutGlow 1.8s ease-in-out infinite;
+  }
+
+  @keyframes cutGlow {
+    0%, 100% {
+      box-shadow:
+        0 0 0 1px rgba(201,168,76,0.30),
+        0 0 8px rgba(201,168,76,0.30),
+        0 0 14px rgba(201,168,76,0.18);
+    }
+    50% {
+      box-shadow:
+        0 0 0 1px rgba(232,201,122,0.60),
+        0 0 14px rgba(232,201,122,0.65),
+        0 0 28px rgba(201,168,76,0.35);
+    }
+  }
+
   .chip-name {
     font-size: 10px;
     font-weight: 600;
@@ -428,6 +453,27 @@
     font-weight: 700;
     letter-spacing: 1px;
     text-transform: uppercase;
+  }
+
+  .cut-line-row {
+    display: block;
+    background: rgba(201,168,76,0.16);
+    border-top: 2px solid var(--gold);
+    border-bottom: 2px solid var(--gold);
+    padding: 10px 16px;
+  }
+
+  .cut-line-text {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--green-deep);
+    text-align: center;
+  }
+
+  .golf-row.near-cut-row {
+    background: #fff8ea;
   }
 
   /* Controls */
@@ -699,7 +745,7 @@
 
   <header>
     <div class="header-badge">Augusta National · April 2026</div>
-    <h1>Ama Ting-Ting <span>Tour</span></h1>
+    <h1>Ama-Ting <span>Tour</span></h1>
     <div class="header-sub">The Masters Pool · 4 picks · lowest total wins · missed cut = +20</div>
   </header>
 
@@ -911,7 +957,6 @@ function namesMatch(a, b) {
 }
 
 // ─── DEFAULT POOL PICKS ───────────────────────────────────────────────────────
-// Golfer names are matched fuzzy against the masters.com field.
 
 const DEFAULT_PICKS = [
   { name: 'Storm',  golfers: ['Bryson DeChambeau', 'Justin Thomas',     'Ludvig Aberg',      'Tommy Fleetwood'] },
@@ -928,7 +973,7 @@ const DEFAULT_PICKS = [
 
 // ─── STATE ────────────────────────────────────────────────────────────────────
 
-let golfField = [];   // [{name, score, thru, status, round1..4}, ...]
+let golfField = [];
 let poolPicks = [];
 let refreshTimer = null;
 
@@ -972,7 +1017,6 @@ function parseMasters(data) {
     function roundScore(key) {
       const rd = p[key];
       if (!rd || rd.roundStatus === 'Pre') return null;
-      // fantasy field = score relative to par for that round
       return (typeof rd.fantasy === 'number') ? rd.fantasy : null;
     }
 
@@ -989,7 +1033,6 @@ function parseMasters(data) {
       r4: roundScore('round4'),
     };
   }).sort((a, b) => {
-    // Cuts to bottom, then sort by score
     const aOut = a.status === 'CUT' || a.status === 'WD' ? 1 : 0;
     const bOut = b.status === 'CUT' || b.status === 'WD' ? 1 : 0;
     if (aOut !== bOut) return aOut - bOut;
@@ -998,9 +1041,7 @@ function parseMasters(data) {
 }
 
 function lookupGolfer(name) {
-  // Try exact match first, then fuzzy
-  let match = golfField.find(g => namesMatch(g.name, name));
-  return match || null;
+  return golfField.find(g => namesMatch(g.name, name)) || null;
 }
 
 // ─── SCORE FORMATTING ─────────────────────────────────────────────────────────
@@ -1023,6 +1064,37 @@ function fmtRound(n) {
   return n.toString();
 }
 
+function getPositionNumber(pos) {
+  if (pos === null || pos === undefined) return null;
+  const match = String(pos).match(/\d+/);
+  return match ? parseInt(match[0], 10) : null;
+}
+
+function isNearCutLine(g) {
+  if (!g || g.status === 'CUT' || g.status === 'WD') return false;
+  const posNum = getPositionNumber(g.pos);
+  return posNum !== null && posNum >= 50;
+}
+
+function getProjectedCutLine() {
+  const activePlayers = golfField.filter(g => g.status !== 'CUT' && g.status !== 'WD');
+  if (!activePlayers.length) return null;
+
+  const sortedByPos = [...activePlayers].sort((a, b) => {
+    const aPos = getPositionNumber(a.pos) ?? 9999;
+    const bPos = getPositionNumber(b.pos) ?? 9999;
+    if (aPos !== bPos) return aPos - bPos;
+    return a.score - b.score;
+  });
+
+  const cutPlayer = sortedByPos.find(g => {
+    const posNum = getPositionNumber(g.pos);
+    return posNum !== null && posNum >= 50;
+  });
+
+  return cutPlayer ? cutPlayer.score : null;
+}
+
 // ─── RENDER POOL TABLE ────────────────────────────────────────────────────────
 
 function renderPool() {
@@ -1032,23 +1104,20 @@ function renderPool() {
     return;
   }
 
-  // Calculate pool totals
   const rows = poolPicks.map(p => {
     let total = 0;
     const golferData = p.golfers.map(gName => {
       const g = lookupGolfer(gName);
-      if (!g) return { name: gName, score: MISSED_CUT_PENALTY, status: 'notfound', thru: '' };
+      if (!g) return { name: gName, score: MISSED_CUT_PENALTY, status: 'notfound', thru: '', pos: null };
       const isCutOrWD = g.status === 'CUT' || g.status === 'WD';
       const score = isCutOrWD ? MISSED_CUT_PENALTY : g.score;
-      return { name: g.name, score, status: g.status, thru: g.thru };
+      return { name: g.name, score, status: g.status, thru: g.thru, pos: g.pos };
     });
     golferData.forEach(g => total += g.score);
     return { participant: p.name, golfers: golferData, total };
   });
 
   rows.sort((a, b) => a.total - b.total);
-
-  // Find the worst score — everyone tied at the bottom gets the punishment
   const worstScore = rows[rows.length - 1].total;
 
   let html = `<div class="pool-table-inner">
@@ -1068,7 +1137,16 @@ function renderPool() {
     const chips = row.golfers.map(g => {
       const isCut = g.status === 'CUT' || g.status === 'WD';
       const isNotFound = g.status === 'notfound';
-      const chipClass = (isCut || isNotFound) ? 'golfer-chip cut' : 'golfer-chip';
+      const liveGolfer = lookupGolfer(g.name);
+      const nearCut = liveGolfer && isNearCutLine(liveGolfer);
+
+      let chipClass = 'golfer-chip';
+      if (isCut || isNotFound) {
+        chipClass += ' cut';
+      } else if (nearCut) {
+        chipClass += ' near-cut';
+      }
+
       const lastName = g.name.split(' ').slice(-1)[0];
       let scoreHtml;
       if (isCut) {
@@ -1109,13 +1187,14 @@ function renderGolf() {
     return;
   }
 
-  // Build set of all picked golfer names
   const pickedNames = new Set();
   poolPicks.forEach(p => p.golfers.forEach(g => pickedNames.add(g.toLowerCase())));
 
   function isPicked(name) {
     return Array.from(pickedNames).some(n => namesMatch(n, name));
   }
+
+  const projectedCut = getProjectedCutLine();
 
   let html = `
     <div class="golf-header">
@@ -1129,10 +1208,31 @@ function renderGolf() {
       <div style="text-align:center">Total</div>
     </div>`;
 
-  golfField.slice(0, 60).forEach(g => {
+  let cutLineInserted = false;
+
+  golfField.forEach(g => {
     const isCut = g.status === 'CUT' || g.status === 'WD';
     const picked = isPicked(g.name);
-    const rowClass = ['golf-row', isCut ? 'is-cut' : '', picked ? 'is-picked' : ''].filter(Boolean).join(' ');
+    const posNum = getPositionNumber(g.pos);
+    const nearCut = isNearCutLine(g);
+
+    if (!cutLineInserted && !isCut && posNum !== null && posNum >= 50) {
+      html += `
+        <div class="cut-line-row">
+          <div class="cut-line-text">
+            Projected cut line ${projectedCut !== null ? `· ${fmtScore(projectedCut)}` : ''}
+          </div>
+        </div>`;
+      cutLineInserted = true;
+    }
+
+    const rowClass = [
+      'golf-row',
+      isCut ? 'is-cut' : '',
+      picked ? 'is-picked' : '',
+      nearCut ? 'near-cut-row' : ''
+    ].filter(Boolean).join(' ');
+
     const pickedDot = picked ? '<span class="picked-dot" title="In your pool"></span>' : '';
     const posDisplay = isCut ? (g.status === 'WD' ? 'WD' : 'CUT') : g.pos;
 
@@ -1144,10 +1244,21 @@ function renderGolf() {
         <div class="gcell gcol-r2">${fmtRound(g.r2)}</div>
         <div class="gcell gcol-r3">${fmtRound(g.r3)}</div>
         <div class="gcell gcol-r4">${fmtRound(g.r4)}</div>
-        <div class="gcell" style="font-size:12px;color:var(--text-muted)">${isCut ? '—' : g.thru === 'F' ? 'F' : g.thru === '-' || !g.thru ? '—' : 'H' + g.thru}</div>
-        <div class="gcell ${isCut ? 'cut-label' : scoreClass(g.score)}">${isCut ? (g.status === 'WD' ? 'WD' : 'CUT') : fmtScore(g.score)}</div>
+        <div class="gcell" style="font-size:12px;color:var(--text-muted)">
+          ${isCut ? '—' : g.thru === 'F' ? 'F' : g.thru === '-' || !g.thru ? '—' : 'H' + g.thru}
+        </div>
+        <div class="gcell ${isCut ? 'cut-label' : scoreClass(g.score)}">
+          ${isCut ? (g.status === 'WD' ? 'WD' : 'CUT') : fmtScore(g.score)}
+        </div>
       </div>`;
   });
+
+  if (!cutLineInserted && projectedCut !== null) {
+    html += `
+      <div class="cut-line-row">
+        <div class="cut-line-text">Projected cut line · ${fmtScore(projectedCut)}</div>
+      </div>`;
+  }
 
   container.innerHTML = html;
 }
@@ -1162,14 +1273,12 @@ function updateStatus(data) {
   const d = data?.data;
   if (!d) { statusEl.textContent = 'No data'; return; }
 
-  const currentRound = d.currentRound;  // "1000" = in progress, "1"-"4" = between rounds
-  const statusRound  = d.statusRound || '';   // e.g. "PNNN" = R1 playing, rest not started
+  const currentRound = d.currentRound;
+  const statusRound  = d.statusRound || '';
   const playerCount  = (d.player || []).length;
 
-  // Determine round label
   let roundLabel, isLive;
   if (currentRound === '1000') {
-    // Find which round is actively being played (statusRound: P=playing, F=finished, N=not started)
     const rounds = statusRound.split('');
     const playingIdx = rounds.indexOf('P');
     roundLabel = playingIdx >= 0 ? `Round ${playingIdx + 1}` : 'Round in progress';
@@ -1217,7 +1326,6 @@ async function fetchAndRender() {
   } catch(e) {
     console.error('Fetch error:', e);
     showBanner('err', `Could not fetch live scores: ${e.message}. Showing last known data. Will retry automatically.`);
-    // Still render with whatever we have
     renderPool();
     renderGolf();
   }
@@ -1269,7 +1377,10 @@ function closeModal() {
 }
 function saveAndClose() {
   poolPicks = editPicks.filter(p => p.name.trim());
-  poolPicks.forEach(p => { p.golfers = p.golfers.map(g => g.trim()).filter(Boolean); while(p.golfers.length < 4) p.golfers.push(''); });
+  poolPicks.forEach(p => {
+    p.golfers = p.golfers.map(g => g.trim()).filter(Boolean);
+    while(p.golfers.length < 4) p.golfers.push('');
+  });
   savePicks(poolPicks);
   renderPool();
   renderGolf();
