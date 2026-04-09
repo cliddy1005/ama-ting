@@ -1,4 +1,4 @@
-=<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -188,12 +188,13 @@
     border-radius: 14px;
     margin-bottom: 32px;
     box-shadow: 0 8px 40px rgba(0,0,0,0.4);
+    background: var(--white);
   }
 
   .pool-table-inner {
     min-width: 620px;
-    background: var(--white);
-    border-radius: 14px;
+    width: max-content;
+    min-width: 100%;
   }
 
   .pool-header {
@@ -208,6 +209,10 @@
     text-transform: uppercase;
     color: rgba(201,168,76,0.7);
     gap: 6px;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    min-width: 620px;
   }
 
   .pool-row {
@@ -732,7 +737,7 @@
 // ─── CONFIG ──────────────────────────────────────────────────────────────────
 
 const MASTERS_URL = 'https://www.masters.com/en_US/scores/feeds/2026/scores.json';
-const REFRESH_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
+const REFRESH_INTERVAL_MS = 5 * 60 * 1000;
 const MISSED_CUT_PENALTY = 20;
 const STORAGE_KEY = 'masters_pool_2026_picks';
 
