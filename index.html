@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>The Masters Pool 2026</title>
+<title>Ama-Ting Tour · The Masters Pool 2026</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Source+Sans+3:wght@300;400;600&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -323,7 +323,7 @@
 
   .golf-header {
     display: grid;
-    grid-template-columns: 52px 1fr 80px 80px 80px 80px 80px;
+    grid-template-columns: 52px 1fr 60px 60px 60px 60px 60px 60px;
     padding: 10px 16px;
     background: var(--green-deep);
     border-bottom: 2px solid var(--gold);
@@ -337,7 +337,7 @@
 
   .golf-row {
     display: grid;
-    grid-template-columns: 52px 1fr 80px 80px 80px 80px 80px;
+    grid-template-columns: 52px 1fr 60px 60px 60px 60px 60px 60px;
     padding: 11px 16px;
     border-bottom: 1px solid var(--cream-dark);
     align-items: center;
@@ -629,7 +629,7 @@
     .total-score { font-size: 18px; }
     .player-name { font-size: 14px; }
     .golf-header, .golf-row {
-      grid-template-columns: 42px 1fr 60px 60px 60px;
+      grid-template-columns: 42px 1fr 50px 50px 50px;
     }
     .golf-header .gcol-r1,.golf-header .gcol-r2,.golf-header .gcol-r3,.golf-header .gcol-r4,
     .golf-row .gcol-r1,.golf-row .gcol-r2,.golf-row .gcol-r3,.golf-row .gcol-r4 {
@@ -643,8 +643,8 @@
 
   <header>
     <div class="header-badge">Augusta National · April 2026</div>
-    <h1>The Masters <span>Pool</span></h1>
-    <div class="header-sub">4 picks · lowest total wins · missed cut = +20</div>
+    <h1>Ama-Ting <span>Tour</span></h1>
+    <div class="header-sub">The Masters Pool · 4 picks · lowest total wins · missed cut = +20</div>
   </header>
 
   <div class="status-bar">
@@ -662,7 +662,7 @@
 
   <div class="controls">
     <button class="btn btn-primary" id="refresh-btn" onclick="fetchAndRender()">↻ Refresh</button>
-    <button class="btn btn-ghost" onclick="openModal()">✎ Edit Picks</button>
+    <button class="btn btn-ghost" disabled style="opacity:0.3;cursor:not-allowed;">✎ Edit Picks</button>
     <button class="btn btn-ghost" onclick="exportCSV()">⬇ Export CSV</button>
   </div>
 
@@ -1016,7 +1016,8 @@ function renderPool() {
       } else if (isNotFound) {
         scoreHtml = `<span class="chip-score cut-pen">+${MISSED_CUT_PENALTY}</span><span class="chip-thru">?</span>`;
       } else {
-        scoreHtml = `<span class="chip-score ${scoreClass(g.score)}">${fmtScore(g.score)}</span><span class="chip-thru">${g.thru}</span>`;
+        const thruLabel = g.thru === 'F' ? 'F' : g.thru === '-' || !g.thru ? '-' : `H${g.thru}`;
+        scoreHtml = `<span class="chip-score ${scoreClass(g.score)}">${fmtScore(g.score)}</span><span class="chip-thru">${thruLabel}</span>`;
       }
       return `<div class="${chipClass}"><span class="chip-name" title="${g.name}">${lastName}</span>${scoreHtml}</div>`;
     }).join('');
@@ -1058,6 +1059,7 @@ function renderGolf() {
       <div class="gcol-r2" style="text-align:center">R2</div>
       <div class="gcol-r3" style="text-align:center">R3</div>
       <div class="gcol-r4" style="text-align:center">R4</div>
+      <div style="text-align:center">Thru</div>
       <div style="text-align:center">Total</div>
     </div>`;
 
@@ -1076,6 +1078,7 @@ function renderGolf() {
         <div class="gcell gcol-r2">${fmtRound(g.r2)}</div>
         <div class="gcell gcol-r3">${fmtRound(g.r3)}</div>
         <div class="gcell gcol-r4">${fmtRound(g.r4)}</div>
+        <div class="gcell" style="font-size:12px;color:var(--text-muted)">${isCut ? '—' : g.thru === 'F' ? 'F' : g.thru === '-' || !g.thru ? '—' : 'H' + g.thru}</div>
         <div class="gcell ${isCut ? 'cut-label' : scoreClass(g.score)}">${isCut ? (g.status === 'WD' ? 'WD' : 'CUT') : fmtScore(g.score)}</div>
       </div>`;
   });
